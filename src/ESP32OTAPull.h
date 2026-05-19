@@ -46,6 +46,7 @@ private:
     String Board      = ARDUINO_BOARD;
     String Device     = "";
     String Config     = "";
+    String Token      = "";
     String CVersion   = "";
     bool DowngradesAllowed = false;
     bool SerialDebug = false;
@@ -110,6 +111,8 @@ private:
     int DoOTAUpdate(const char* URL, ActionType Action)
     {
         HTTPClient http;
+        http.addHeader("Authorization", "Bearer " + Token);
+        
         ConfigureHTTPClient(http, URL);
 
         // Send HTTP GET request
@@ -175,6 +178,15 @@ public:
     {
         RootCA = rootCA;
         InsecureConnection = false;
+        return *this;
+    }
+
+    /// @brief Specify a configuration string that must match any "Config" in JSON
+    /// @param config An arbitrary string showing the current configuration
+    /// @return The current ESP32OTAPull object for chaining
+    ESP32OTAPull &SetToken(const char *token)
+    {
+        Token = token;
         return *this;
     }
 
@@ -269,8 +281,8 @@ public:
         CurrentVersion = CurrentVersion == NULL ? "" : CurrentVersion;
 
 		HTTPClient http;
+        http.addHeader("Authorization", "Bearer " + Token);
 		ConfigureHTTPClient(http, JSON_URL);
-		
         // Send HTTP GET request
         int httpResponseCode = http.GET();
 		
@@ -288,14 +300,13 @@ public:
 		
 		// Parse response
 		JsonDocument doc;
-		
 		// Parse JSON object (and intercept)
 		//ReadLoggingStream loggingStream(rawStream, Serial);
 		//DeserializationError error = deserializeJson(doc, loggingStream);
 		
 		// Parse JSON object
 		DeserializationError error = deserializeJson(doc, rawStream);
-
+    	Serial.print("Value: ");
 		// Disconnect
 		http.end();		
 
@@ -306,6 +317,11 @@ public:
             }
 			return JSON_PROBLEM;
 		}
+    	String jsonString;
+    	serializeJson(doc, jsonString);
+
+    	Serial.println("JSON:");
+    	Serial.println(jsonString);
 
         String _Board    = Board.isEmpty() ? ARDUINO_BOARD : Board;
 		String _Device   = Device.isEmpty() ? WiFi.macAddress() : Device;
