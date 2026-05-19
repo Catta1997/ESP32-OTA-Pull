@@ -181,8 +181,8 @@ public:
         return *this;
     }
 
-    /// @brief Specify a configuration string that must match any "Config" in JSON
-    /// @param config An arbitrary string showing the current configuration
+    /// @brief Specify a GitHub token string for JSON and OTA
+    /// @param token GitHub Token String
     /// @return The current ESP32OTAPull object for chaining
     ESP32OTAPull &SetToken(const char *token)
     {
